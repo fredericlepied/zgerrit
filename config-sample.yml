@@ -1,0 +1,13 @@
+# username on the gerrit server
+username:
+# gerrit server name
+host: review.openstack.org
+# gerrit server port
+port: 29418
+# known hosts file
+knownhosts: ~/.ssh/known_hosts
+
+# 0MQ socket connection: bind|connect
+method: bind
+# 0MQ Endpoint
+endpoint: tcp://*:7777
