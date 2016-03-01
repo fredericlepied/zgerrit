@@ -29,9 +29,10 @@ from txzmq import ZmqPubConnection
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.python.filepath import FilePath
-from twisted.internet.protocol import ClientFactory, Protocol
+from twisted.internet.protocol import Protocol
 from twisted.internet.endpoints import UNIXClientEndpoint
 from twisted.conch.ssh.keys import EncryptedKeyError, Key
+from twisted.conch.client.direct import SSHClientFactory
 from twisted.conch.client.knownhosts import KnownHostsFile
 from twisted.conch.endpoints import SSHCommandClientEndpoint
 
@@ -52,14 +53,13 @@ class GerritJsonProtocol(Protocol):
         self.zmq_factory = zf
 
     def dataReceived(self, data):
-        print 'received', data
         json_data = json.loads(data)
         if json_data and self.zmq_factory:
             for conn in self.zmq_factory.connections:
                 conn.publish(json.dumps({'gerrit': json_data}))
 
 
-class GerritJsonFactory(ClientFactory):
+class GerritJsonFactory(SSHClientFactory):
     protocol = GerritJsonProtocol
 
     def __init__(self, zf):
@@ -67,6 +67,14 @@ class GerritJsonFactory(ClientFactory):
 
     def buildProtocol(self, addr):
         return GerritJsonProtocol(self.zmq_factory)
+
+    def clientConnectionLost(self, connector, reason):
+        print 'connection lost'
+        connector.connect()
+
+    def clientConnectionFailed(self, connector, reason):
+        print 'connection failed'
+        connector.connect()
 
 
 class ConnectionParameters(object):
